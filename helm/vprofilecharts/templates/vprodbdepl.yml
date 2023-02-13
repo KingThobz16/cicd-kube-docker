@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vprodb
+  labels:
+    # This label is for our service definition file, we are going to create a service of type cluster IP
+    # and out service is going to route the request to any Pod that has this label
+    app: vprodb
+spec:
+  selector:
+    matchLabels:
+      app: vprodb
+  replicas: 1
+  template:
+    # pod definition
+    metadata:
+      labels:
+        app: vprodb
+    # specs about the bod
+    spec:
+      containers:
+      - name: vprodb
+        # image from imrans app
+        image: vprofile/vprofiledb:V1
+        # ignore if db dir is there and attach volume
+        args:
+          - "--ignore-db-dir=lost+found"
+        # Map the volume defined below to the pod
+        volumeMounts:
+          - mountPath: /var/lib/mysql
+            name: vpro-db-data
+        ports:
+          - name: vprodb-port
+            containerPort: 3306
+        # Environment varible to read the mysql pass we stored on the secret
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: app-secret
+                key: db-pass
+      nodeSelector:
+        # Node running on the volume zone 
+        zone: us-west-1b
+      volumes:
+        - name: vpro-db-data
+          awsElasticBlockStore:
+            volumeID: vol-09b0e4bf81f794c25
+            # format it with extension 4
+            fsType: ext4
+
