@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
       - name: vproapp
-        image: vprofile/vprofileapp:V1
+        # to pass in dynamic image with helm
+        image: {{.Values.appimage}}
         ports:
           - name: vproapp-port 
             containerPort: 8080
